@@ -308,46 +308,6 @@ class StorageCoalesce(ExprMutator):
         )
 
 
-class LiftConst(ExprMutator):
-    """An internal pass to lift constants to the top level of function."""
-
-    def __init__(self):
-        self.i = 0
-        self.constants = []
-        self.top_level = True
-        super().__init__()
-
-    def visit_constant(self, const):
-        var = expr.var(f"const{self.i}")
-        self.i += 1
-        self.constants.append((var, const))
-        return var
-
-    def visit_function(self, fn):
-        if int(getattr(fn.attrs, "Primitive", 0)) == 1:
-            return fn
-
-        outer_constant = self.constants
-        self.constants = []
-        # Populates self.constants.
-        body = self.visit(fn.body)
-        body = mk_let(self.constants, body)
-        self.constants = outer_constant
-
-        return Function(fn.params, body, fn.ret_type, fn.type_params, fn.attrs)
-
-    def visit_let(self, let):
-        bindings = []
-        while isinstance(let, expr.Let):
-            new_var = self.visit(let.var)
-            new_val = self.visit(let.value)
-            bindings.append((new_var, new_val))
-            let = let.body
-
-        new_body = self.visit(let)
-        return mk_let(bindings, new_body)
-
-
 @function_pass(opt_level=0)
 class MemoryPlan:
     """An explicit pass wrapper around StorageCoalesce."""
@@ -360,16 +320,3 @@ class MemoryPlan:
 
 
 register_func("relay.transform.MemoryPlan", MemoryPlan)
-
-
-@function_pass(opt_level=0)
-class LiftConstants:
-    """An explicit pass wrapper around LiftConst."""
-
-    def transform_function(self, func, mod, _):
-        mod.import_from_std("core.rly")
-        func = LiftConst().visit(func)
-        return func
-
-
-register_func("relay.transform.LiftConstants", LiftConstants)

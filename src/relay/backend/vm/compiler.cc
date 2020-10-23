@@ -64,12 +64,6 @@ Pass MemoryPlan() {
   return (*f)();
 }
 
-Pass LiftConstants() {
-  auto f = tvm::runtime::Registry::Get("relay.transform.LiftConstants");
-  CHECK(f != nullptr) << "unable to load the constant lifting pass";
-  return (*f)();
-}
-
 }  // namespace transform
 
 namespace vm {

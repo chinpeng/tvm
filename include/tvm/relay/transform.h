@@ -416,6 +416,13 @@ TVM_DLL Pass SimplifyExpr();
  */
 TVM_DLL Pass ManifestAlloc(Target target_host, Map<tvm::Integer, tvm::Target> targets);
 
+/*!
+ * \brief Lift the constants to the top level of a function.
+ *
+ * \return The pass.
+ */
+Pass LiftConstants();
+
 }  // namespace transform
 
 /*!
